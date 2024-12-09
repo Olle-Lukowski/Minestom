@@ -13,7 +13,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.extras.bungee.BungeeCordProxy;
+import net.minestom.server.network.ConnectionState;
 import net.minestom.server.network.packet.client.handshake.ClientHandshakePacket;
+import net.minestom.server.network.packet.server.login.LoginDisconnectPacket;
 import net.minestom.server.network.player.GameProfile;
 import net.minestom.server.network.player.PlayerConnection;
 import net.minestom.server.network.player.PlayerSocketConnection;
@@ -39,8 +41,8 @@ public final class HandshakeListener {
    * multiple, or invalid tokens.
    */
   private static final Component INVALID_BUNGEE_FORWARDING = Component.text(
-      "Invalid connection, please connect through the BungeeCord proxy. If " +
-      "you believe this is an error, contact a server administrator.",
+      "Invalid connection, please connect through the BungeeCord proxy. If "
+          + "you believe this is an error, contact a server administrator.",
       NamedTextColor.RED);
 
   public static void listener(@NotNull ClientHandshakePacket packet,
@@ -94,10 +96,10 @@ public final class HandshakeListener {
             ((InetSocketAddress)connection.getRemoteAddress()).getPort());
         socketConnection.setRemoteAddress(socketAddress);
 
-        UUID playerUuid = UUID.fromString(
-            split[2].replaceFirst("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{" +
-                                  "XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
-                                  "$1-$2-$3-$4-$5"));
+        UUID playerUuid = UUID.fromString(split[2].replaceFirst(
+            "(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{"
+                + "XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}+)",
+            "$1-$2-$3-$4-$5"));
 
         List<GameProfile.Property> properties = new ArrayList<>();
         if (hasProperties) {
@@ -148,6 +150,12 @@ public final class HandshakeListener {
         return;
       }
     }
+  }
+
+  private static void disconnect(@NotNull PlayerConnection connection,
+                                 @NotNull Component reason) {
+    connection.sendPacket(new LoginDisconnectPacket(reason));
+    connection.disconnect();
   }
 
   private static void bungeeDisconnect(@NotNull PlayerConnection connection) {
